@@ -38,7 +38,7 @@ resource "okta_group_role" "dev_app_admin_role" {
 resource "okta_group_memberships" "dev" {
   group_id = okta_group.developers.id
   users = [
-    okta_user.jane_doe.id, 
+    okta_user.jane_doe.id,
   ]
 }
 
