@@ -5,8 +5,8 @@ on:
 
 env:
     TF_VAR_api_token: ${{ secrets.OKTA_API_TOKEN }}
-    TF_VAR_base_url: ${{ env.OKTA_BASE_URL }}
-    TF_VAR_org_name: ${{ env.OKTA_ORG_NAME }}
+    TF_VAR_base_url: ${{ vars.OKTA_BASE_URL }}
+    TF_VAR_org_name: ${{ vars.OKTA_ORG_NAME }}
 
 jobs:
   terraform-pre-plan-validation:
