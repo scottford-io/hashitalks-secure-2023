@@ -21,6 +21,12 @@ jobs:
     steps:
     - uses: 'actions/checkout@v3'
 
+    - id: 'google-cloud-auth'
+      name: 'Authenticate to Google Cloud'
+      uses: 'google-github-actions/auth@v1'
+      with:
+        credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}'
+
     - uses: hashicorp/setup-terraform@v2
       with:
         terraform_wrapper: false
