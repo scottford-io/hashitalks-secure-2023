@@ -118,7 +118,7 @@ jobs:
         run: |
           echo "### ${{ vars.OKTA_ORG_NAME }} Terraform post-plan security scan :shield:" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          cnspec scan terraform plan ./terraform/plan.json --asset-name ${{ vars.OKTA_ORG_NAME }}-terraform-hcl -f policies/okta-security.mql.yaml >> $GITHUB_STEP_SUMMARY
+          cnspec scan terraform plan ./terraform/plan.json --asset-name ${{ vars.OKTA_ORG_NAME }}-terraform-plan -f policies/okta-security.mql.yaml >> $GITHUB_STEP_SUMMARY
           echo "CNSPEC_PRE_SCAN=$GITHUB_STEP_SUMMARY" >> $GITHUB_ENV
         env:
           MONDOO_DETECT_CICD: false
