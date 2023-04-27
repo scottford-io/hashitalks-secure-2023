@@ -1,0 +1,984 @@
+policies:
+  - uid: mondoo-okta-security-v2
+    name: Okta Organization Security 
+    version: 1.0.0
+    license: MPL-2.0
+    tags:
+      mondoo.com/category: security
+      mondoo.com/platform: okta-org,saas
+    authors:
+      - name: Mondoo, Inc
+        email: hello@mondoo.com
+    docs:
+      desc: |
+        # Overview
+        
+        The Mondoo Okta Security policy bundle provides security recommendations for Okta organizations. This policy supports scanning of Okta Organizations as well as Terraform projects using the [Okta Terraform provider](https://registry.terraform.io/providers/okta/okta/latest/docs) from the HashiCorp Terraform Registry. 
+        
+        ## About remote scanning
+        
+        Remote scans with cnspec provide on demand security assessments of infrastructure and services without the need to install any agents or integrations. cnspec comes with a growing list of providers to connect and scan local and remote targets.
+        
+        A complete list of providers can be found by running the following command:
+        
+        ```bash
+        cnspec scan --help
+        ```
+        
+        ### cnspec Okta provider
+        
+        This policy uses the `okta` provider to authenticate with Okta's API in order to remotely scan an Okta organization. Additional information on the `okta` provider can be found by running the following command:
+        
+        ```bash
+        cnspec scan okta --help
+        ```
+        
+        ## Configuring the Okta provider
+        
+        The `okta` provider for cnspec requires an API token to authenticate and run scans.
+        
+        ### Create an API token
+        
+        To create an API token, see [Create an API token](https://developer.okta.com/docs/guides/create-an-api-token/main/) on Okta's documentation site.
+        
+        ### Configure a OKTA_TOKEN environment variable
+        
+        You supply your API token to cnspec using the `OKTA_TOKEN` environment variable.
+        
+        #### Linux / macOS
+        
+        ```bash
+        export OKTA_TOKEN=<OKTA_TOKEN>
+        ```
+        
+        #### Windows
+        ```powershell
+        $Env:OKTA_TOKEN = "<OKTA_TOKEN>"
+        ```
+        
+        ## Scan an Okta organization
+        
+        To scan the configuration of an Okta organization all together:
+        
+        ```bash
+        cnspec scan okta --organization DOMAIN.okta.com --token $OKTA_TOKEN  -f okta-security.mql.yaml
+        ```
+
+        ## Scan Terraform HCL code managing Okta with the Terraform provider for Okta 
+
+        ```
+        cnspec scan terraform /path/to/terraform -f okta-security.mql.yaml
+        ```
+
+        ## Scan Terraform plan file Okta with the Terraform provider for Okta 
+
+        Generate a Terraform plan.json file to scan:
+
+        ```
+        terraform plan -out plan.tfplan
+        terraform show -json plan.tfplan > tfplan.json
+        ```
+
+        Scan Terraform plan file 
+
+        ```
+        cnspec scan terraform plan /path/to/plan.json -f okta-security.mql.yaml
+        ```
+
+        ## Scan Terraform state file Okta with the Terraform provider for Okta 
+
+        Generate a Terraform state.json file to scan:
+
+        ```
+        terraform show -json > tfstate.json
+        ```
+
+        Scan Terraform state file: 
+
+        ```
+        cnspec scan terraform state /path/to/tfstate.json -f okta-security.mql.yaml 
+        ```
+
+        ## Join the community! 
+
+        Our goal is to build policies that are simple to deploy, accurate, and actionable.
+        
+        If you have any suggestions on how to improve this policy, or if you need support, [join the community](https://github.com/orgs/mondoohq/discussions) in GitHub Discussions. "
+    groups: 
+      - title: Okta Organization HealthInsight recommendations
+        checks: 
+          # Limit the number of super admin roles
+          - uid: mondoo-okta-security-limit-super-admins 
+          # Enable strong password policy settings
+          - uid: mondoo-okta-security-password-settings-minimum-length
+          - uid: mondoo-okta-security-password-settings-min-lowercase
+          - uid: mondoo-okta-security-password-settings-min-number
+          - uid: mondoo-okta-security-password-settings-min-symbols
+          - uid: mondoo-okta-security-password-settings-min-age
+          - uid: mondoo-okta-security-password-settings-exclude-username
+          - uid: mondoo-okta-security-password-settings-exclude-first-name
+          - uid: mondoo-okta-security-password-settings-exclude-last-name
+          - uid: mondoo-okta-security-password-settings-dictionary-lookup
+          - uid: mondoo-okta-security-password-settings-max-age
+          - uid: mondoo-okta-security-password-settings-expire-warning
+          - uid: mondoo-okta-security-password-settings-history-count
+          - uid: mondoo-okta-security-password-settings-max-lockout-attempts
+          - uid: mondoo-okta-security-password-settings-password-auto-unlock-minutes
+          - uid: mondoo-okta-security-password-settings-password-show-lockout-failures
+          - uid: mondoo-okta-security-password-settings-password-email-recovery
+          - uid: mondoo-okta-security-password-settings-password-sms-recovery
+          - uid: mondoo-okta-security-password-settings-password-question-recovery
+          - uid: mondoo-okta-security-threatinsight-block-suspicous-ip-addresses
+          - uid: mondoo-okta-security-disable-weaker-mfa-factors-in-factor-enrollment-policies 
+
+queries:
+  - uid: mondoo-okta-security-password-settings-minimum-length
+    title: Enable strong password settings for password policies - minimum length
+    impact: 30
+    props:
+      - uid: oktaPasswordLength
+        mql: 15
+    docs:
+      desc: |
+        Specify a minimum password length of at least eight characters. Longer passwords provide greater protection against brute force attacks.
+
+        Longer passwords are more difficult for users to remember, especially when combined with other complexity requirements (for example, require uppercase, lowercase, symbols, and so on). NIST recommends longer passwords that are easy to remember (“phrase-like”) but more difficult to obtain from brute force attacks.
+
+        These recommendations are provided by Okta as an example of typical password standards. They're derived from current cybersecurity industry best practices. They aren't intended to replace internationally recognized cybersecurity standards, such as ISO 27001, National Institute of Standards and Technology (NIST), PCI-DSS, or others. Your IT department may need to adjust these settings to comply with whichever cybersecurity standard your organization has chosen to follow.
+    variants:
+      - uid: mondoo-okta-security-password-settings-minimum-length-runtime
+      - uid: mondoo-okta-security-password-settings-minimum-length-terraform-hcl
+      - uid: mondoo-okta-security-password-settings-minimum-length-terraform-plan
+      - uid: mondoo-okta-security-password-settings-minimum-length-terraform-state
+  - uid: mondoo-okta-security-password-settings-minimum-length-runtime
+    title: Enable strong password settings for password policies - minimum length 
+    filters: asset.platform == "okta-org"
+    impact: 30
+    docs:
+      remediation:
+        - id: console
+          desc: |
+            Configure password settings for password policies
+
+            1. In the Admin Console menu, go to Security > Authentication.
+            2. In the Password tab, review each policy. To edit the policy, click Edit.
+            3. Edit the password settings based on the recommendations.
+            4. To enable each setting, select the checkboxes for Password History, Password Age, Lock out, and Common Password Check.
+    mql: |
+      okta.policies.password.all( settings['password']['complexity']['minLength'] >= 15 )
+  - uid: mondoo-okta-security-password-settings-minimum-length-terraform-hcl
+    title: Enable strong password settings for password policies - minimum length 
+    filters: asset.platform == "terraform-hcl" && terraform.providers.one( nameLabel == "okta" ) 
+    impact: 30
+    docs:
+      remediation:
+        - id: terraform
+          desc: |
+            ```
+            resource "okta_policy_password_default" "default" {
+              password_min_length            = var.password_minimum_length
+            }
+            ```
+    mql: |
+      terraform.resources.where( nameLabel == /okta_policy_password/ ).all( arguments['password_min_length'] == /var/ || arguments['password_min_length'] >= 15 )
+  - uid: mondoo-okta-security-password-settings-minimum-length-terraform-plan
+    title: Enable strong password settings for password policies - minimum length 
+    filters: asset.platform == "terraform-plan" && terraform.plan.resourceChanges.contains( providerName == /okta/ )
+    impact: 30
+    mql: |
+      terraform.plan.resourceChanges.where( type == /okta_policy_password/ ).all( change.after['password_min_length'] >= 15 )
+  - uid: mondoo-okta-security-password-settings-minimum-length-terraform-state
+    title: Enable strong password settings for password policies - minimum length 
+    filters: asset.platform == "terraform-state" && terraform.state.resources.contains( type == /okta_policy_password/ )
+    impact: 30
+    mql: |
+      terraform.state.resources.where( type == /okta_policy_password/ ).all( values['password_min_length'] >= 15 )
+
+  - uid: mondoo-okta-security-password-settings-max-lockout-attempts
+    title: Enable strong password settings for password policies - max lockout attempts 
+    impact: 30
+    props:
+      - uid: oktaPasswordMaxLockoutAttempts
+        mql: 5
+    docs:
+      desc: |
+        Specify the maximum number of invalid password attempts before locking the user's account. This provides protection against brute-force password attacks.
+
+        Users will be unable to access their accounts after multiple failed sign-ins.
+
+        Admins configure the account unlock options in the lockout options in password policy rules.
+
+        If an admin doesn't enable any self-service or auto-unlock options, users must ask their admin to unlock their account.
+
+        When admins configure lockout policies, they should consider typical user sign-in patterns and security to determine how many attempts are allowed. A lockout policy that allows only a low number of attempts may cause more lockouts. For example, users may mistype passwords when signing in from a mobile device or when they've recently changed their passwords. Some applications may auto-retry cached passwords when they're changed, resulting in user lockouts. However, a lockout policy with too many attempts allowed increases the risk of credential attacks.
+    variants:
+      - uid: mondoo-okta-security-password-settings-max-lockout-attempts-runtime
+      - uid: mondoo-okta-security-password-settings-max-lockout-attempts-terraform-hcl
+      - uid: mondoo-okta-security-password-settings-max-lockout-attempts-terraform-plan
+      - uid: mondoo-okta-security-password-settings-max-lockout-attempts-terraform-state
+  - uid: mondoo-okta-security-password-settings-max-lockout-attempts-runtime
+    title: Enable strong password settings for password policies - max lockout attempts
+    filters: asset.platform == "okta-org" 
+    impact: 30
+    mql: |
+      okta.policies.password.all( settings['password']['lockout']['maxAttempts'] >= 5 )  
+  - uid: mondoo-okta-security-password-settings-max-lockout-attempts-terraform-hcl
+    title: Enable strong password settings for password policies - max lockout attempts
+    filters: asset.platform == "terraform-hcl" && terraform.providers.one( nameLabel == "okta" ) 
+    impact: 30
+    mql: |
+      terraform.resources.where( nameLabel == /okta_policy_password/ ).all( arguments['password_max_lockout_attempts'] == /var/ || arguments['password_max_lockout_attempts'] <= 5 )
+  - uid: mondoo-okta-security-password-settings-max-lockout-attempts-terraform-plan
+    title: Enable strong password settings for password policies - max lockout attempts 
+    filters: asset.platform == "terraform-plan" && terraform.plan.resourceChanges.contains( providerName == /okta/ )
+    impact: 30
+    mql: |
+      terraform.plan.resourceChanges.where( type == /okta_policy_password/ ).all( change.after['password_max_lockout_attempts'] <= 5 )
+  - uid: mondoo-okta-security-password-settings-max-lockout-attempts-terraform-state
+    title: Enable strong password settings for password policies - max lockout attempts 
+    filters: asset.platform == "terraform-state" && terraform.state.resources.contains( type == /okta_policy_password/ )
+    impact: 30
+    mql: |
+      terraform.state.resources.where( type == /okta_policy_password/ ).all( values['password_max_lockout_attempts'] <= 5 )
+
+  - uid: mondoo-okta-security-password-settings-min-lowercase
+    title: Enable strong password settings for password policies - minimum lowercase 
+    impact: 30
+    props:
+      - uid: oktaPasswordminLowercase
+        mql: 1
+    docs:
+      desc: |
+        Specify the minimum number of lowercase characters in a password. Complex passwords increase the security of your users' accounts.
+    variants:
+      - uid: mondoo-okta-security-password-settings-min-lowercase-runtime
+      - uid: mondoo-okta-security-password-settings-min-lowercase-terraform-hcl
+      - uid: mondoo-okta-security-password-settings-min-lowercase-terraform-plan
+      - uid: mondoo-okta-security-password-settings-min-lowercase-terraform-state
+  - uid: mondoo-okta-security-password-settings-min-lowercase-runtime
+    title: Enable strong password settings for password policies - minimum lowercase 
+    filters: asset.platform == "okta-org" 
+    impact: 30
+    mql: |
+      okta.policies.password.all( settings['password']['complexity']['minLowerCase'] >= 1 )
+  - uid: mondoo-okta-security-password-settings-min-lowercase-terraform-hcl
+    title: Enable strong password settings for password policies - minimum lowercase 
+    filters: asset.platform == "terraform-hcl" && terraform.providers.one( nameLabel == "okta" ) 
+    impact: 30
+    mql: |
+      terraform.resources.where( nameLabel == /okta_policy_password/ ).all( arguments['password_min_lowercase'] == /var/ || arguments['password_min_lowercase'] >= 1 )
+  - uid: mondoo-okta-security-password-settings-min-lowercase-terraform-plan
+    title: Enable strong password settings for password policies - minimum lowercase 
+    filters: asset.platform == "terraform-plan" && terraform.plan.resourceChanges.contains( providerName == /okta/ )
+    impact: 30
+    mql: |
+      terraform.plan.resourceChanges.where( type == /okta_policy_password/ ).all( change.after['password_min_lowercase'] >= 1 )
+  - uid: mondoo-okta-security-password-settings-min-lowercase-terraform-state
+    title: Enable strong password settings for password policies - minimum lowercase 
+    filters: asset.platform == "terraform-state" && terraform.state.resources.contains( type == /okta_policy_password/ )
+    impact: 30
+    mql: |
+      terraform.state.resources.where( type == /okta_policy_password/ ).all( values['password_min_lowercase'] >= 1 )
+
+  - uid: mondoo-okta-security-password-settings-min-number
+    title: Enable strong password settings for password policies - minimum number
+    impact: 30
+    props:
+      - uid: oktaPasswordminNumber
+        mql: 1
+    docs:
+      desc: |
+        Specify the minimum number of lowercase characters in a password. Complex passwords increase the security of your users' accounts.
+    variants:
+      - uid: mondoo-okta-security-password-settings-min-number-runtime
+      - uid: mondoo-okta-security-password-settings-min-number-terraform-hcl
+      - uid: mondoo-okta-security-password-settings-min-number-terraform-plan
+      - uid: mondoo-okta-security-password-settings-min-number-terraform-state
+  - uid: mondoo-okta-security-password-settings-min-number-runtime
+    title: Enable strong password settings for password policies - minimum number 
+    filters: asset.platform == "okta-org"
+    impact: 30
+    mql: |
+      okta.policies.password.all( settings['password']['complexity']['minNumber'] >= 1 ) 
+  - uid: mondoo-okta-security-password-settings-min-number-terraform-hcl
+    title: Enable strong password settings for password policies - minimum number 
+    filters: asset.platform == "terraform-hcl" && terraform.providers.one( nameLabel == "okta" ) 
+    impact: 30
+    mql: |
+      terraform.resources.where( nameLabel == /okta_policy_password/ ).all( arguments['password_min_number'] == /var/ || arguments['password_min_number'] >= 1 )
+  - uid: mondoo-okta-security-password-settings-min-number-terraform-plan
+    title: Enable strong password settings for password policies - minimum number 
+    filters: asset.platform == "terraform-plan" && terraform.plan.resourceChanges.contains( providerName == /okta/ )
+    impact: 30
+    mql: |
+      terraform.plan.resourceChanges.where( type == /okta_policy_password/ ).all( change.after['password_min_number'] >= 1 )
+
+  - uid: mondoo-okta-security-password-settings-min-number-terraform-state
+    title: Enable strong password settings for password policies - minimum number 
+    filters: asset.platform == "terraform-state" && terraform.state.resources.contains( type == /okta_policy_password/ )
+    impact: 30
+    mql: |
+      terraform.state.resources.where( type == /okta_policy_password/ ).all( values['password_min_number'] >= 1 )
+
+  - uid: mondoo-okta-security-password-settings-min-symbols
+    title: Enable strong password settings for password policies - minimum symbols
+    impact: 30
+    props:
+      - uid: oktaPasswordminSymbol
+        mql: 1
+    docs:
+      desc: |
+        Specify the minimum number of symbol characters in a password. Complex passwords increase the security of your users' accounts.
+    variants:
+      - uid: mondoo-okta-security-password-settings-min-symbols-runtime
+      - uid: mondoo-okta-security-password-settings-min-symbols-terraform-hcl
+      - uid: mondoo-okta-security-password-settings-min-symbols-terraform-plan
+      - uid: mondoo-okta-security-password-settings-min-symbols-terraform-state
+  - uid: mondoo-okta-security-password-settings-min-symbols-runtime
+    title: Enable strong password settings for password policies - minimum symbols
+    filters: asset.platform == "okta-org"
+    impact: 30
+    mql: |
+      okta.policies.password.all( settings['password']['complexity']['minSymbol'] >= 1 ) 
+  - uid: mondoo-okta-security-password-settings-min-symbols-terraform-hcl
+    title: Enable strong password settings for password policies - minimum symbols
+    filters: asset.platform == "terraform-hcl" && terraform.providers.one( nameLabel == "okta" ) 
+    impact: 30
+    mql: |
+      terraform.resources.where( nameLabel == /okta_policy_password/ ).all( arguments['password_min_symbol'] == /var/ || arguments['password_min_symbol'] >= 1 )
+  - uid: mondoo-okta-security-password-settings-min-symbols-terraform-plan
+    title: Enable strong password settings for password policies - minimum symbols
+    filters: asset.platform == "terraform-plan" && terraform.plan.resourceChanges.contains( providerName == /okta/ )
+    impact: 30
+    mql: |
+      terraform.plan.resourceChanges.where( type == /okta_policy_password/ ).all( change.after['password_min_symbol'] >= 1 )
+  - uid: mondoo-okta-security-password-settings-min-symbols-terraform-state
+    title: Enable strong password settings for password policies - minimum symbols
+    filters: asset.platform == "terraform-state" && terraform.state.resources.contains( type == /okta_policy_password/ )
+    impact: 30
+    mql: |
+      terraform.state.resources.where( type == /okta_policy_password/ ).all( values['password_min_symbol'] >= 1 )
+
+  - uid: mondoo-okta-security-password-settings-min-age
+    title: Enable strong password settings for password policies - minimum age
+    impact: 30
+    props:
+      - uid: oktaPasswordminAge
+        title: Minimum time interval in minutes between password changes
+        mql: 60
+    docs:
+      desc: |
+        Specify the minimum time interval in minutes between password changes. Setting the minimum password interval protects against brute force attacks.
+    variants:
+      - uid: mondoo-okta-security-password-settings-min-age-runtime
+      - uid: mondoo-okta-security-password-settings-min-age-terraform-hcl
+      - uid: mondoo-okta-security-password-settings-min-age-terraform-plan
+      - uid: mondoo-okta-security-password-settings-min-age-terraform-state
+  - uid: mondoo-okta-security-password-settings-min-age-runtime
+    title: Enable strong password settings for password policies - minimum age
+    filters: asset.platform == "okta-org"
+    impact: 30
+    mql: |
+      okta.policies.password.all( settings['password']['age']['minAgeMinutes'] <= 60 ) 
+  - uid: mondoo-okta-security-password-settings-min-age-terraform-hcl
+    title: Enable strong password settings for password policies - minimum age
+    filters: asset.platform == "terraform-hcl" && terraform.providers.one( nameLabel == "okta" ) 
+    impact: 30
+    mql: |
+      terraform.resources.where( nameLabel == /okta_policy_password/ ).all( arguments['password_min_age_minutes'] == /var/ || arguments['password_min_age_minutes'] <= 60 )
+  - uid: mondoo-okta-security-password-settings-min-age-terraform-plan
+    title: Enable strong password settings for password policies - minimum age
+    filters: asset.platform == "terraform-plan" && terraform.plan.resourceChanges.contains( providerName == /okta/ )
+    impact: 30
+    mql: |
+      terraform.plan.resourceChanges.where( type == /okta_policy_password/ ).all( change.after['password_min_age_minutes'] <= 60 )
+  - uid: mondoo-okta-security-password-settings-min-age-terraform-state
+    title: Enable strong password settings for password policies - minimum age
+    filters: asset.platform == "terraform-state" && terraform.state.resources.contains( type == /okta_policy_password/ )
+    impact: 30
+    mql: |
+      terraform.state.resources.where( type == /okta_policy_password/ ).all( values['password_min_age_minutes'] <= 60 )
+
+  - uid: mondoo-okta-security-password-settings-exclude-username
+    title: Enable strong password settings for password policies - exclude username
+    impact: 30
+    props:
+      - uid: oktaPasswordexcludeUsername
+        title: Setting to enforce whether the username must be excluded from the password
+        mql: true
+    docs:
+      desc: |
+        This check enforces whether the username must be excluded from the password. Complex passwords increase the security of your users' accounts.
+    variants:
+      - uid: mondoo-okta-security-password-settings-exclude-username-runtime
+      - uid: mondoo-okta-security-password-settings-exclude-username-terraform-hcl
+      - uid: mondoo-okta-security-password-settings-exclude-username-terraform-plan
+      - uid: mondoo-okta-security-password-settings-exclude-username-terraform-state
+  - uid: mondoo-okta-security-password-settings-exclude-username-terraform-hcl
+    title: Enable strong password settings for password policies - exclude username
+    filters: asset.platform == "terraform-hcl" && terraform.providers.one( nameLabel == "okta" ) 
+    impact: 30
+    mql: |
+      terraform.resources.where( nameLabel == /okta_policy_password/ ).all( arguments['password_exclude_username'] == /var/ || arguments['password_exclude_username'] == true )
+  - uid: mondoo-okta-security-password-settings-exclude-username-runtime
+    title: Enable strong password settings for password policies - exclude username
+    filters: asset.platform == "okta-org"
+    impact: 30
+    mql: |
+      okta.policies.password.all( settings['password']['complexity']['excludeUsername'] == true )
+  - uid: mondoo-okta-security-password-settings-exclude-username-terraform-plan
+    title: Enable strong password settings for password policies - exclude username
+    filters: asset.platform == "terraform-plan" && terraform.plan.resourceChanges.contains( providerName == /okta/ )
+    impact: 30
+    mql: |
+      terraform.plan.resourceChanges.where( type == /okta_policy_password/ ).all( change.after['password_exclude_username'] == true )
+  - uid: mondoo-okta-security-password-settings-exclude-username-terraform-state
+    title: Enable strong password settings for password policies - exclude username
+    filters: asset.platform == "terraform-state" && terraform.state.resources.contains( type == /okta_policy_password/ )
+    impact: 30
+    mql: |
+      terraform.state.resources.where( type == /okta_policy_password/ ).all( values['password_exclude_username'] == true )
+
+  - uid: mondoo-okta-security-password-settings-exclude-first-name
+    title: Enable strong password settings for password policies - exclude first name
+    impact: 30
+    props:
+      - uid: oktaPasswordexcludeFirstname
+        title: Setting to enforce whether the user's first name must be excluded from the password
+        mql: true
+    docs:
+      desc: |
+        This check enforces whether the user's first name must be excluded from the password. Complex passwords increase the security of your users' accounts.
+    variants:
+      - uid: mondoo-okta-security-password-settings-exclude-first-name-terraform-hcl
+      - uid: mondoo-okta-security-password-settings-exclude-first-name-terraform-plan
+  - uid: mondoo-okta-security-password-settings-exclude-first-name-terraform-hcl
+    title: Enable strong password settings for password policies - exclude first name
+    filters: asset.platform == "terraform-hcl" && terraform.providers.one( nameLabel == "okta" ) 
+    impact: 30
+    mql: |
+      terraform.resources.where( nameLabel == /okta_policy_password/ ).all( arguments['password_exclude_first_name'] == /var/ || arguments['password_exclude_first_name'] == true )
+  - uid: mondoo-okta-security-password-settings-exclude-first-name-terraform-plan
+    title: Enable strong password settings for password policies - exclude first name
+    filters: asset.platform == "terraform-plan" && terraform.plan.resourceChanges.contains( providerName == /okta/ )
+    impact: 30
+    mql: |
+      terraform.plan.resourceChanges.where( type == /okta_policy_password/ ).all( change.after['password_exclude_first_name'] == true )
+
+  - uid: mondoo-okta-security-password-settings-exclude-last-name
+    title: Enable strong password settings for password policies - exclude last name
+    impact: 30
+    props:
+      - uid: oktaPasswordexcludeLastName
+        title: Setting to enforce whether the user's last name must be excluded from the password
+        mql: true
+    docs:
+      desc: |
+        This check enforces whether the user's last name must be excluded from the password. Complex passwords increase the security of your users' accounts.
+    variants:
+      - uid: mondoo-okta-security-password-settings-exclude-last-name-terraform-hcl
+      - uid: mondoo-okta-security-password-settings-exclude-last-name-terraform-plan
+  - uid: mondoo-okta-security-password-settings-exclude-last-name-terraform-hcl
+    title: Enable strong password settings for password policies - exclude last name
+    filters: asset.platform == "terraform-hcl" && terraform.providers.one( nameLabel == "okta" ) 
+    impact: 30
+    mql: |
+      terraform.resources.where( nameLabel == /okta_policy_password/ ).all( arguments['password_exclude_last_name'] == /var/ || arguments['password_exclude_last_name'] == true )
+  - uid: mondoo-okta-security-password-settings-exclude-last-name-terraform-plan
+    title: Enable strong password settings for password policies - exclude last name
+    filters: asset.platform == "terraform-plan" && terraform.plan.resourceChanges.contains( providerName == /okta/ )
+    impact: 30
+    mql: |
+      terraform.plan.resourceChanges.where( type == /okta_policy_password/ ).all( change.after['password_exclude_last_name'] == true )
+
+  - uid: mondoo-okta-security-password-settings-dictionary-lookup
+    title: Enable strong password settings for password policies - dictionary lookup
+    impact: 30
+    props:
+      - uid: oktaPasswordDictionaryLookup
+        title: Setting to check passwords against common password dictionary
+        mql: true
+    docs:
+      desc: |
+        This checks passwords against common password dictionary. Complex passwords increase the security of your users' accounts.
+    variants:
+      - uid: mondoo-okta-security-password-settings-dictionary-lookup-runtime
+      - uid: mondoo-okta-security-password-settings-dictionary-lookup-terraform-hcl
+      - uid: mondoo-okta-security-password-settings-dictionary-lookup-terraform-plan
+      - uid: mondoo-okta-security-password-settings-dictionary-lookup-terraform-state
+  - uid: mondoo-okta-security-password-settings-dictionary-lookup-runtime
+    title: Enable strong password settings for password policies - dictionary lookup
+    filters: asset.platform == "okta-org"
+    impact: 30
+    mql: |
+      okta.policies.password.all( settings['password']['complexity']['dictionary']['common']['exclude'] == true )
+  - uid: mondoo-okta-security-password-settings-dictionary-lookup-terraform-hcl
+    title: Enable strong password settings for password policies - dictionary lookup
+    filters: asset.platform == "terraform-hcl" && terraform.providers.one( nameLabel == "okta" ) 
+    impact: 30
+    mql: |
+      terraform.resources.where( nameLabel == /okta_policy_password/ ).all( arguments['password_dictionary_lookup'] == /var/ || arguments['password_dictionary_lookup'] == true )
+  - uid: mondoo-okta-security-password-settings-dictionary-lookup-terraform-plan
+    title: Enable strong password settings for password policies - dictionary lookup 
+    filters: asset.platform == "terraform-plan" && terraform.plan.resourceChanges.contains( providerName == /okta/ )
+    impact: 30
+    mql: |
+      terraform.plan.resourceChanges.where( type == /okta_policy_password/ ).all( change.after['password_dictionary_lookup'] == true )
+  - uid: mondoo-okta-security-password-settings-dictionary-lookup-terraform-state
+    title: Enable strong password settings for password policies - dictionary lookup 
+    filters: asset.platform == "terraform-state" && terraform.state.resources.contains( type == /okta_policy_password/ )
+    impact: 30
+    mql: |
+      terraform.state.resources.where( type == /okta_policy_password/ ).all( values['password_dictionary_lookup'] == true )
+
+  - uid: mondoo-okta-security-password-settings-max-age
+    title: Enable strong password settings for password policies - max age
+    impact: 30
+    props:
+      - uid: oktaPasswordMaxAge
+        title: Length in days a password is valid before expiry
+        mql: 90
+    docs:
+      desc: |
+        This checks the length in days a password is valid before expiry. Rotating passwords increases the security of your users' accounts. 
+    variants:
+      - uid: mondoo-okta-security-password-settings-max-age-runtime
+      - uid: mondoo-okta-security-password-settings-max-age-terraform-hcl
+      - uid: mondoo-okta-security-password-settings-max-age-terraform-plan
+      - uid: mondoo-okta-security-password-settings-max-age-terraform-state
+  - uid: mondoo-okta-security-password-settings-max-age-runtime
+    title: Enable strong password settings for password policies - max age
+    filters: asset.platform == "okta-org"
+    impact: 30
+    mql: |
+      okta.policies.password.all( settings['password']['age']['maxAgeDays'] != 0 && settings['password']['age']['maxAgeDays'] <= 90 )
+  - uid: mondoo-okta-security-password-settings-max-age-terraform-hcl
+    title: Enable strong password settings for password policies - max age
+    filters: asset.platform == "terraform-hcl" && terraform.providers.one( nameLabel == "okta" ) 
+    impact: 30
+    mql: |
+      terraform.resources.where( nameLabel == /okta_policy_password/ ).all( arguments['password_max_age_days'] == /var/ || arguments['password_max_age_days'] != 0 && arguments['password_max_age_days'] <= 90 )
+  - uid: mondoo-okta-security-password-settings-max-age-terraform-plan
+    title: Enable strong password settings for password policies - max age 
+    filters: asset.platform == "terraform-plan" && terraform.plan.resourceChanges.contains( providerName == /okta/ )
+    impact: 30
+    mql: |
+      terraform.plan.resourceChanges.where( type == /okta_policy_password/ ).all( change.after['password_max_age_days'] != 0 && change.after['password_max_age_days'] <= 90 )
+  - uid: mondoo-okta-security-password-settings-max-age-terraform-state
+    title: Enable strong password settings for password policies - max age 
+    filters: asset.platform == "terraform-state" && terraform.state.resources.contains( type == /okta_policy_password/ )
+    impact: 30
+    mql: |
+      terraform.state.resources.where( type == /okta_policy_password/ ).all( values['password_max_age_days'] != 0 && values['password_max_age_days'] <= 90 )
+
+  - uid: mondoo-okta-security-password-settings-expire-warning
+    title: Enable strong password settings for password policies - expiration warning
+    impact: 30
+    props:
+      - uid: oktaPasswordExpireWarning
+        title: Length in days a user will be warned before password expiry
+        mql: 15
+    docs:
+      desc: |
+        This checks the length in days a user will be warned before password expiry. Rotating passwords increases the security of your users' accounts.
+    variants:
+      - uid: mondoo-okta-security-password-settings-expire-warning-runtime
+      - uid: mondoo-okta-security-password-settings-expire-warning-terraform-hcl
+      - uid: mondoo-okta-security-password-settings-expire-warning-terraform-plan
+      - uid: mondoo-okta-security-password-settings-expire-warning-terraform-state
+  - uid: mondoo-okta-security-password-settings-expire-warning-runtime
+    title: Enable strong password settings for password policies - expiration warning
+    filters: asset.platform == "okta-org"
+    impact: 30
+    mql: |
+      okta.policies.password.all( settings['password']['age']['expireWarnDays'] != 0 && settings['password']['age']['expireWarnDays'] == 15 )
+  - uid: mondoo-okta-security-password-settings-expire-warning-terraform-hcl
+    title: Enable strong password settings for password policies - expiration warning
+    filters: asset.platform == "terraform-hcl" && terraform.providers.one( nameLabel == "okta" ) 
+    impact: 30
+    mql: |
+      terraform.resources.where( nameLabel == /okta_policy_password/ ).all( arguments['password_expire_warn_days'] == /var/ || arguments['password_expire_warn_days'] != 0 && arguments['password_expire_warn_days'] == 15 )
+  - uid: mondoo-okta-security-password-settings-expire-warning-terraform-plan
+    title: Enable strong password settings for password policies - expiration warning 
+    filters: asset.platform == "terraform-plan" && terraform.plan.resourceChanges.contains( providerName == /okta/ )
+    impact: 30
+    mql: |
+      terraform.plan.resourceChanges.where( type == /okta_policy_password/ ).all( change.after['password_expire_warn_days'] != 0 && change.after['password_expire_warn_days'] == 15)
+  - uid: mondoo-okta-security-password-settings-expire-warning-terraform-state
+    title: Enable strong password settings for password policies - expiration warning 
+    filters: asset.platform == "terraform-state" && terraform.state.resources.contains( type == /okta_policy_password/ )
+    impact: 30
+    mql: |
+      terraform.state.resources.where( type == /okta_policy_password/ ).all( values['password_expire_warn_days'] != 0 && values['password_expire_warn_days'] == 15 )
+
+  - uid: mondoo-okta-security-password-settings-history-count
+    title: Enable strong password settings for password policies - history count
+    impact: 30
+    props:
+      - uid: oktaPasswordHistoryCount
+        title: Number of distinct passwords that must be created before they can be reused
+        mql: 24
+    docs:
+      desc: |
+        This checks the number of distinct passwords that must be created before they can be reused. Rotating passwords increases the security of your users' accounts.
+    variants:
+      - uid: mondoo-okta-security-password-settings-history-count-runtime
+      - uid: mondoo-okta-security-password-settings-history-count-terraform-hcl
+      - uid: mondoo-okta-security-password-settings-history-count-terraform-plan
+      - uid: mondoo-okta-security-password-settings-history-count-terraform-state
+  - uid: mondoo-okta-security-password-settings-history-count-runtime
+    title: Enable strong password settings for password policies - history count
+    filters: asset.platform == "okta-org"
+    impact: 30
+    mql: |
+      okta.policies.password.all( settings['password']['age']['historyCount'] >= 24 ) 
+  - uid: mondoo-okta-security-password-settings-history-count-terraform-hcl
+    title: Enable strong password settings for password policies - history count
+    filters: asset.platform == "terraform-hcl" && terraform.providers.one( nameLabel == "okta" ) 
+    impact: 30
+    mql: |
+      terraform.resources.where( nameLabel == /okta_policy_password/ ).all( arguments['password_history_count'] == /var/ || arguments['password_history_count'] >= 24 )
+  - uid: mondoo-okta-security-password-settings-history-count-terraform-plan
+    title: Enable strong password settings for password policies - history count 
+    filters: asset.platform == "terraform-plan" && terraform.plan.resourceChanges.contains( providerName == /okta/ )
+    impact: 30
+    mql: |
+      terraform.plan.resourceChanges.where( type == /okta_policy_password/ ).all( change.after['password_history_count'] >= 24 )
+  - uid: mondoo-okta-security-password-settings-history-count-terraform-state
+    title: Enable strong password settings for password policies - history count 
+    filters: asset.platform == "terraform-state" && terraform.state.resources.contains( type == /okta_policy_password/ )
+    impact: 30
+    mql: |
+      terraform.state.resources.where( type == /okta_policy_password/ ).all( values['password_history_count'] >= 24 )
+
+  - uid: mondoo-okta-security-password-settings-password-auto-unlock-minutes
+    title: Enable strong password settings for password policies - auto unlock 
+    impact: 30
+    props:
+      - uid: oktaPasswordAutoUnlock
+        title: Number of minutes before a locked account is unlocked
+        mql: 30
+    docs:
+      desc: |
+        This checks the number of minutes before a locked account is unlocked.
+    variants:
+      - uid: mondoo-okta-security-password-settings-auto-unlock-minutes-runtime
+      - uid: mondoo-okta-security-password-settings-auto-unlock-minutes-terraform-hcl
+      - uid: mondoo-okta-security-password-settings-auto-unlock-minutes-terraform-plan
+      - uid: mondoo-okta-security-password-settings-auto-unlock-minutes-terraform-state
+  - uid: mondoo-okta-security-password-settings-auto-unlock-minutes-runtime
+    title: Enable strong password settings for password policies - auto unlock
+    filters: asset.platform == "okta-org"
+    impact: 30
+    mql: |
+      okta.policies.password.all( settings['password']['lockout']['autoUnlockMinutes'] >= 30 ) 
+  - uid: mondoo-okta-security-password-settings-auto-unlock-minutes-terraform-hcl
+    title: Enable strong password settings for password policies - auto unlock
+    filters: asset.platform == "terraform-hcl" && terraform.providers.one( nameLabel == "okta" ) 
+    impact: 30
+    mql: |
+      terraform.resources.where( nameLabel == /okta_policy_password/ ).all( arguments['password_auto_unlock_minutes'] == /var/ || arguments['password_auto_unlock_minutes'] >= 30 )
+  - uid: mondoo-okta-security-password-settings-auto-unlock-minutes-terraform-plan
+    title: Enable strong password settings for password policies - auto unlock 
+    filters: asset.platform == "terraform-plan" && terraform.plan.resourceChanges.contains( providerName == /okta/ )
+    impact: 30
+    mql: |
+      terraform.plan.resourceChanges.where( type == /okta_policy_password/ ).all( change.after['password_auto_unlock_minutes'] >= 30 )
+  - uid: mondoo-okta-security-password-settings-auto-unlock-minutes-terraform-state
+    title: Enable strong password settings for password policies - auto unlock 
+    filters: asset.platform == "terraform-state" && terraform.state.resources.contains( type == /okta_policy_password/ )
+    impact: 30
+    mql: |
+      terraform.state.resources.where( type == /okta_policy_password/ ).all( values['password_auto_unlock_minutes'] >= 30 )
+
+  - uid: mondoo-okta-security-password-settings-password-show-lockout-failures
+    title: Enable strong password settings for password policies - show lockout failures 
+    impact: 30
+    props:
+      - uid: oktaPasswordShowLockoutFailures
+        title: If a user should be informed when their account is locked
+        mql: true
+    docs:
+      desc: |
+        This checks whether a user should be informed when their account is locked.
+    variants:
+      - uid: mondoo-okta-security-password-settings-show-lockout-failures-runtime
+      - uid: mondoo-okta-security-password-settings-show-lockout-failures-terraform-hcl
+      - uid: mondoo-okta-security-password-settings-show-lockout-failures-terraform-plan
+      - uid: mondoo-okta-security-password-settings-show-lockout-failures-terraform-state
+  - uid: mondoo-okta-security-password-settings-show-lockout-failures-runtime
+    title: Enable strong password settings for password policies - show lockout failures
+    filters: asset.platform == "okta-org"
+    impact: 30
+    mql: |
+      okta.policies.password.all( settings['password']['lockout']['showLockoutFailures'] == true )
+  - uid: mondoo-okta-security-password-settings-show-lockout-failures-terraform-hcl
+    title: Enable strong password settings for password policies - show lockout failures
+    filters: asset.platform == "terraform-hcl" && terraform.providers.one( nameLabel == "okta" ) 
+    impact: 30
+    mql: |
+      terraform.resources.where( nameLabel == /okta_policy_password/ ).all( arguments['password_show_lockout_failures'] == /var/ || arguments['password_show_lockout_failures'] == true )
+  - uid: mondoo-okta-security-password-settings-show-lockout-failures-terraform-plan
+    title: Enable strong password settings for password policies - show lockout failures 
+    filters: asset.platform == "terraform-plan" && terraform.plan.resourceChanges.contains( providerName == /okta/ )
+    impact: 30
+    mql: |
+      terraform.plan.resourceChanges.where( type == /okta_policy_password/ ).all( change.after['password_show_lockout_failures'] == true )
+  - uid: mondoo-okta-security-password-settings-show-lockout-failures-terraform-state
+    title: Enable strong password settings for password policies - show lockout failures 
+    filters: asset.platform == "terraform-state" && terraform.state.resources.contains( type == /okta_policy_password/ )
+    impact: 30
+    mql: |
+      terraform.state.resources.where( type == /okta_policy_password/ ).all( values['password_show_lockout_failures'] == true )
+
+  - uid: mondoo-okta-security-password-settings-password-email-recovery
+    title: Enable strong password settings for password policies - email recovery 
+    impact: 30
+    props:
+      - uid: oktaPasswordEmailRecovery
+        title: Enable or disable email password recovery - ACTIVE or INACTIVE
+        mql: return "ACTIVE"
+    docs:
+      desc: |
+        This checks whether email password recovery is enabled or disabled.
+    variants:
+      - uid: mondoo-okta-security-password-settings-email-recovery-runtime
+      - uid: mondoo-okta-security-password-settings-email-recovery-terraform-hcl
+      - uid: mondoo-okta-security-password-settings-email-recovery-terraform-plan
+      - uid: mondoo-okta-security-password-settings-email-recovery-terraform-state
+  - uid: mondoo-okta-security-password-settings-email-recovery-runtime
+    title: Enable strong password settings for password policies - email recovery 
+    filters: asset.platform == "okta-org"
+    impact: 30
+    mql: |
+      okta.policies.password.all( settings['recovery']['factors']['okta_email']['status'] == "ACTIVE" )
+  - uid: mondoo-okta-security-password-settings-email-recovery-terraform-hcl
+    title: Enable strong password settings for password policies - email recovery 
+    filters: asset.platform == "terraform-hcl" && terraform.providers.one( nameLabel == "okta" ) 
+    impact: 30
+    mql: |
+      terraform.resources.where( nameLabel == /okta_policy_password/ ).all( arguments['email_recovery'] == /var/ || arguments['email_recovery'] == "ACTIVE" )
+  - uid: mondoo-okta-security-password-settings-email-recovery-terraform-plan
+    title: Enable strong password settings for password policies - email recovery  
+    filters: asset.platform == "terraform-plan" && terraform.plan.resourceChanges.contains( providerName == /okta/ )
+    impact: 30
+    mql: |
+      terraform.plan.resourceChanges.where( type == /okta_policy_password/ ).all( change.after['email_recovery'] == "ACTIVE" )
+  - uid: mondoo-okta-security-password-settings-email-recovery-terraform-state
+    title: Enable strong password settings for password policies - email recovery  
+    filters: asset.platform == "terraform-state" && terraform.state.resources.contains( type == /okta_policy_password/ )
+    impact: 30
+    mql: |
+      terraform.state.resources.where( type == /okta_policy_password/ ).all( values['email_recovery'] == "ACTIVE" )
+
+  - uid: mondoo-okta-security-password-settings-password-sms-recovery
+    title: Enable strong password settings for password policies - sms recovery 
+    impact: 30
+    props:
+      - uid: oktaPasswordSmsRecovery
+        title: Enable or disable sms password recovery - ACTIVE or INACTIVE
+        mql: return "ACTIVE"
+    docs:
+      desc: |
+        This checks whether sms password recovery is enabled or disabled.
+    variants:
+      - uid: mondoo-okta-security-password-settings-sms-recovery-runtime
+      - uid: mondoo-okta-security-password-settings-sms-recovery-terraform-hcl
+      - uid: mondoo-okta-security-password-settings-sms-recovery-terraform-plan
+      - uid: mondoo-okta-security-password-settings-sms-recovery-terraform-state
+  - uid: mondoo-okta-security-password-settings-sms-recovery-runtime
+    title: Enable strong password settings for password policies - sms recovery 
+    filters: asset.platform == "okta-org"
+    impact: 30
+    mql: |
+      okta.policies.password.all( settings['recovery']['factors']['okta_sms']['status'] == "ACTIVE" )
+  - uid: mondoo-okta-security-password-settings-sms-recovery-terraform-hcl
+    title: Enable strong password settings for password policies - sms recovery 
+    filters: asset.platform == "terraform-hcl" && terraform.providers.one( nameLabel == "okta" ) 
+    impact: 30
+    mql: |
+      terraform.resources.where( nameLabel == /okta_policy_password/ ).all( arguments['sms_recovery'] == /var/ || arguments['sms_recovery'] == "ACTIVE" )
+  - uid: mondoo-okta-security-password-settings-sms-recovery-terraform-plan
+    title: Enable strong password settings for password policies - sms recovery  
+    filters: asset.platform == "terraform-plan" && terraform.plan.resourceChanges.contains( providerName == /okta/ )
+    impact: 30
+    mql: |
+      terraform.plan.resourceChanges.where( type == /okta_policy_password/ ).all( change.after['sms_recovery'] == "ACTIVE" )
+  - uid: mondoo-okta-security-password-settings-sms-recovery-terraform-state
+    title: Enable strong password settings for password policies - sms recovery  
+    filters: asset.platform == "terraform-state" && terraform.state.resources.contains( type == /okta_policy_password/ )
+    impact: 30
+    mql: |
+      terraform.state.resources.where( type == /okta_policy_password/ ).all( values['sms_recovery'] == "ACTIVE" )
+
+  - uid: mondoo-okta-security-password-settings-password-question-recovery
+    title: Enable strong password settings for password policies - question recovery 
+    impact: 30
+    props:
+      - uid: oktaPasswordQuestionRecovery
+        title: Enable or disable question password recovery - ACTIVE or INACTIVE
+        mql: return "ACTIVE"
+    docs:
+      desc: |
+        This checks whether question password recovery is enabled or disabled.
+    variants:
+      - uid: mondoo-okta-security-password-settings-question-recovery-runtime
+      - uid: mondoo-okta-security-password-settings-question-recovery-terraform-hcl
+      - uid: mondoo-okta-security-password-settings-question-recovery-terraform-plan
+      - uid: mondoo-okta-security-password-settings-question-recovery-terraform-state
+  - uid: mondoo-okta-security-password-settings-question-recovery-runtime
+    title: Enable strong password settings for password policies - question recovery 
+    filters: asset.platform == "okta-org"
+    impact: 30
+    mql: |
+      okta.policies.password.all( settings['recovery']['factors']['recovery_question']['status'] == "ACTIVE" ) 
+  - uid: mondoo-okta-security-password-settings-question-recovery-terraform-hcl
+    title: Enable strong password settings for password policies - question recovery 
+    filters: asset.platform == "terraform-hcl" && terraform.providers.one( nameLabel == "okta" ) 
+    impact: 30
+    mql: |
+      terraform.resources.where( nameLabel == /okta_policy_password/ ).all( arguments['question_recovery'] == /var/ || arguments['question_recovery'] == "ACTIVE" )
+  - uid: mondoo-okta-security-password-settings-question-recovery-terraform-plan
+    title: Enable strong password settings for password policies - question recovery  
+    filters: asset.platform == "terraform-plan" && terraform.plan.resourceChanges.contains( providerName == /okta/ )
+    impact: 30
+    mql: |
+      terraform.plan.resourceChanges.where( type == /okta_policy_password/ ).all( change.after['question_recovery'] == "ACTIVE" )
+  - uid: mondoo-okta-security-password-settings-question-recovery-terraform-state
+    title: Enable strong password settings for password policies - question recovery  
+    filters: asset.platform == "terraform-state" && terraform.state.resources.contains( type == /okta_policy_password/ )
+    impact: 30
+    mql: |
+      terraform.state.resources.where( type == /okta_policy_password/ ).all( values['question_recovery'] == "ACTIVE" )
+
+  - uid: mondoo-okta-security-limit-super-admins
+    title: Limit the number of super admins
+    impact: 100
+    docs:
+      desc: |
+        Admin roles allow you to control user access to a range of Okta functions. You can assign more than one role to an individual admin if their job requires them to perform actions that span multiple roles. This role can create other admins, assign or remove permissions, and perform all other admin activities. The super admin has the highest permissions of all admin roles.
+    props:
+      - uid: maxOktaSuperAdmins
+        mql: 15
+    variants:
+      - uid: mondoo-okta-security-limit-super-admins-runtime 
+  - uid: mondoo-okta-security-limit-super-admins-runtime
+    title: Limit the number of super admins 
+    impact: 100 
+    filters: asset.platform == "okta-org"        
+    mql: okta.users.where( roles { type == "SUPER_ADMIN" } ).length < 15
+
+  - uid: mondoo-okta-security-threatinsight-block-suspicous-ip-addresses
+    title: Enable Okta ThreatInsight to block suspicious IP addresses
+    impact: 100
+    docs:
+      desc: |
+        Configure network blocklisting to deny access from known malicious IP addresses or locations from your Okta org.
+
+        Admins can block access to their Okta org to IP addresses coming from network zones, IP zones, and dynamic zones. Network zones contain a list of IP addresses, and dynamic zones contain a list of locations, ASNs, or IP types. Okta doesn't allow blocklisted IP addresses to access any of your org's URLs. Okta blocks these requests before any type of policy evaluation occurs.
+
+        __Okta recommends__
+
+        Block any known untrusted IP addresses, locations, or proxy servers to limit access to your org. If your org uses IP Trust for network zones, Okta also recommends blocking any IP addresses that are identified as a Tor anonymizer proxy. Only add IP addresses or locations that aren't associated with legitimate user activity.
+
+        __Security impact__
+
+        Moderate 
+
+        __User impact__
+        	
+        Low
+
+        Legitimate users within your org see no change in behavior. Clients connecting from blocked network zones see a 403 (access denied) error.
+
+    variants:
+      - uid: mondoo-okta-security-threatinsight-block-suspicous-ip-addresses-terraform-hcl  
+      - uid: mondoo-okta-security-threatinsight-block-suspicous-ip-addresses-terraform-plan 
+      - uid: mondoo-okta-security-threatinsight-block-suspicous-ip-addresses-terraform-state 
+      - uid: mondoo-okta-security-threatinsight-block-suspicous-ip-addresses-runtime
+  - uid: mondoo-okta-security-threatinsight-block-suspicous-ip-addresses-runtime
+    title: Enable Okta ThreatInsight to block suspicious IP addresses
+    filters: asset.platform == "okta-org"
+    impact: 100
+    mql: |
+      okta.networks.any( usage == "BLOCKLIST" && gateways.length > 0 )
+  - uid: mondoo-okta-security-threatinsight-block-suspicous-ip-addresses-terraform-hcl
+    title: Enable Okta ThreatInsight to block suspicious IP addresses
+    filters: asset.platform == "terraform-hcl" && terraform.providers.one( nameLabel == "okta" )
+    impact: 100
+    mql: |
+      terraform.resources.where( nameLabel == "okta_network_zone" ).one( arguments['usage'] == "BLOCKLIST" )
+      terraform.resources.where( nameLabel == "okta_network_zone" && arguments['usage'] == "BLOCKLIST" ).all( arguments['gateways'].length > 0 )
+  - uid: mondoo-okta-security-threatinsight-block-suspicous-ip-addresses-terraform-plan
+    title: Enable Okta ThreatInsight to block suspicious IP addresses
+    filters: asset.platform == "terraform-plan" && terraform.plan.resourceChanges.contains( providerName == /okta/ )
+    impact: 100
+    mql: |
+      terraform.plan.resourceChanges.where( type == "okta_network_zone" ).one( change.after['usage'] == "BLOCKLIST" )
+      terraform.plan.resourceChanges.where( type == "okta_network_zone" && change.after['usage'] == "BLOCKLIST" ).all( change.after['gateways'].length > 0 )
+  - uid: mondoo-okta-security-threatinsight-block-suspicous-ip-addresses-terraform-state
+    title: Enable Okta ThreatInsight to block suspicious IP addresses
+    filters: asset.platform == "terraform-state" && terraform.state.resources.contains( type == /okta_policy_password/ )
+    impact: 100
+    mql: |
+      terraform.state.resources.where( type == 'okta_network_zone' ).contains( values['usage'] == "BLOCKLIST" )
+      terraform.state.resources.where( type == 'okta_network_zone' ).contains( values['usage'] == "BLOCKLIST" && values['gateways'].length > 0 )
+
+  - uid: mondoo-okta-security-disable-weaker-mfa-factors-in-factor-enrollment-policies
+    title: Disable weaker MFA factors in factor enrollment policies
+    impact: 100
+    docs:  
+      desc: |
+        Enable strong MFA factors to improve resistance to phishing and man-in-the-middle attacks. 
+
+        Admins can configure multifactor authentication (MFA) at the organization level or application level. When users sign in to Okta or an app, they're prompted to authenticate themselves. If you deploy strong factors, they provide better protection against phishing, adversary-in-the-middle attacks, and others.
+
+        __Okta recommends__
+
+        Update factor enrollment policies based on the following:
+
+        - Enable as primary factors: Okta Verify (with Push if available), Google Authenticator, WebAuthn
+        - Don't enable as secondary factors: Security Questions and SMS/Email/Voice
+
+        __Security impact__
+
+        High  
+
+        __User impact__
+
+        High
+
+        When signing in to their org, end users are prompted to enroll in required factors and may enroll in any factors set to optional. Factors that have been disabled aren't visible to end users.
+    variants:
+      - uid: mondoo-okta-security-disable-weaker-mfa-factors-in-factor-enrollment-policies-runtime
+      - uid: mondoo-okta-security-disable-weaker-mfa-factors-in-factor-enrollment-policies-terraform-hcl
+      - uid: mondoo-okta-security-disable-weaker-mfa-factors-in-factor-enrollment-policies-terraform-plan
+      - uid: mondoo-okta-security-disable-weaker-mfa-factors-in-factor-enrollment-policies-terraform-state
+  - uid: mondoo-okta-security-disable-weaker-mfa-factors-in-factor-enrollment-policies-runtime
+    title: Disable weaker MFA factors in factor enrollment policies 
+    filters: asset.platform == "okta-org"
+    impact: 100
+    mql: |
+      okta.policies.mfaEnroll.all( _.settings['factors']['okta_email']['enroll']['self'] != /(OPTIONAL|REQUIRED)/ )
+      okta.policies.mfaEnroll.all( _.settings['factors']['okta_sms']['enroll']['self'] != /(OPTIONAL|REQUIRED)/ )
+  - uid: mondoo-okta-security-disable-weaker-mfa-factors-in-factor-enrollment-policies-terraform-hcl
+    title: Disable weaker MFA factors in factor enrollment policies 
+    impact: 100
+    filters: asset.platform == "terraform-hcl" && terraform.providers.one( nameLabel == "okta" )
+    mql: |
+      terraform.resources.where( nameLabel == "okta_policy_mfa_default" ).all( arguments['okta_sms']['enroll'] != /(OPTIONAL|REQUIRED)/)
+      terraform.resources.where( nameLabel == "okta_policy_mfa_default" ).all( arguments['okta_email']['enroll'] != /(OPTIONAL|REQUIRED)/)
+  - uid: mondoo-okta-security-disable-weaker-mfa-factors-in-factor-enrollment-policies-terraform-plan
+    title: Disable weaker MFA factors in factor enrollment policies 
+    impact: 100
+    filters: asset.platform == "terraform-plan" && terraform.plan.resourceChanges.contains( providerName == /okta/ )
+    mql: |
+      terraform.plan.resourceChanges.where( type == "okta_policy_mfa_default" ).all( change.after['okta_email']['enroll'] != /(OPTIONAL|REQUIRED)/ )
+      terraform.plan.resourceChanges.where( type == "okta_policy_mfa_default" ).all( change.after['okta_sms']['enroll'] != /(OPTIONAL|REQUIRED)/ )
+  - uid: mondoo-okta-security-disable-weaker-mfa-factors-in-factor-enrollment-policies-terraform-state
+    title: Disable weaker MFA factors in factor enrollment policies 
+    filters: asset.platform == "terraform-state" && terraform.state.resources.contains( type == /okta_policy_password/ )
+    impact: 100
+    mql: |
+      terraform.state.resources.where( type == 'okta_policy_mfa_default' ).all( values['okta_sms']['enroll'] != /(OPTIONAL|REQUIRED)/ )
+      terraform.state.resources.where( type == 'okta_policy_mfa_default' ).all( values['okta_email']['enroll'] != /(OPTIONAL|REQUIRED)/ )

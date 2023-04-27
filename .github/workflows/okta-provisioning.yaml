@@ -1,0 +1,151 @@
+name: Okta Provisioning
+on:
+  push:
+  workflow_dispatch:
+
+env:
+    TF_VAR_api_token: ${{ secrets.OKTA_API_TOKEN }}
+    TF_VAR_base_url: ${{ env.OKTA_BASE_URL }}
+    TF_VAR_org_name: ${{ env.OKTA_ORG_NAME }}
+
+jobs:
+  terraform-pre-plan-validation:
+    name: "Validate Terraform HCL (pre-plan)"
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
+    defaults:
+      run:
+          working-directory: ./terraform
+    steps:
+    - uses: 'actions/checkout@v3'
+
+    - uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_wrapper: false
+
+    - name: Terraform Init
+      id: init
+      run: terraform init -reconfigure
+
+    - name: Terraform Format
+      id: fmt
+      run: terraform fmt -check  
+
+    - name: Terraform Validate
+      id: validate
+      run: terraform validate -no-color
+
+  cnspec-scan-terraform-hcl:
+    name: "Scan Terraform HCL (pre-plan)"
+    runs-on: ubuntu-latest
+    container: mondoo/cnspec:8
+    needs: terraform-pre-plan-validation 
+    permissions:
+      pull-requests: write
+      contents: write
+
+    steps:
+      - uses: 'actions/checkout@v3'
+
+      - name: Scan Terraform HCL (pre-plan)
+        run: |
+          echo "### Terraform pre-plan security scan :shield:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cnspec scan terraform ./terraform --asset-name terraform-hcl-luna-org.okta.com -f policies/okta-provisioning.yaml
+          echo "CNSPEC_PRE_SCAN=$GITHUB_STEP_SUMMARY" >> $GITHUB_ENV
+
+  terraform-plan:
+    name: Generate Terraform Plan
+    runs-on: ubuntu-latest
+    container: hashicorp/terraform:1.4
+    needs: cnspec-scan-terraform-hcl 
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      - id: 'google-cloud-auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v1'
+        with:
+          credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}'
+
+      - name: Mitigate that fancy action/cache@v3 does not work with busybox tar on alpine
+        run: apk add --no-cache tar
+
+      - name: Use cache to share files between jobs
+        uses: actions/cache@v3
+        id: terraform-plan
+        with:
+          key: ${{ runner.os }}-terraform-${{ hashFiles('**/terraform/**') }}
+          path: terraform/plan.json          
+
+      - name: Terraform init
+        run: terraform -chdir="./terraform" init
+
+      - name: Terraform plan
+        run: terraform -chdir="./terraform" plan -out=plan.out
+
+      - name: Terraform show
+        run: terraform -chdir="./terraform" show -json plan.out > terraform/plan.json
+
+  post-plan-scan:
+    name: Scan Terraform (post-plan)
+    needs: terraform-plan
+    runs-on: ubuntu-latest
+    container: mondoo/cnspec:latest
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      - name: Use cache to share files between jobs
+        uses: actions/cache@v3
+        id: terraform-plan
+        with:
+          key: ${{ runner.os }}-terraform-${{ hashFiles('**/terraform/**') }}
+          path: terraform/plan.json
+        
+      - name: Scan Terraform Plan
+        run: cnspec scan terraform plan terraform/plan.json --asset-name terraform-plan-luna-org.okta.com -f policies/okta-provisioning.yaml
+        env:
+          MONDOO_DETECT_CICD: false
+
+  terraform-apply:
+    name: Terraform Apply 
+    runs-on: ubuntu-latest
+    container: hashicorp/terraform:1.4
+    needs: post-plan-scan
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      - id: 'google-cloud-auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v1'
+        with:
+          credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}'
+
+      - name: Terraform init
+        run: terraform -chdir="./terraform" init 
+
+      - name: Terraform Apply
+        run: terraform -chdir="./terraform" apply -auto-approve
+
+  post-apply-scan:
+    name: Scan Okta Organization
+    needs: terraform-apply
+    runs-on: ubuntu-latest
+    container: mondoo/cnspec:latest
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+        
+      - name: Scan Terraform Plan
+        run: cnspec scan okta --organization dev-81307026.okta.com --token ${{ secrets.OKTA_API_TOKEN }} --asset-name luna-org.okta.com 
+        env:
+          MONDOO_DETECT_CICD: false

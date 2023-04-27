@@ -1,5 +1,5 @@
-data "okta_network_zone" "BlockedIpZone" {
-  name = "BlockedIpZone"
+data "okta_network_zone" "BlockedIpZoneDefault" {
+  name = "BlockedIpZoneDefault"
 }
 
 data "okta_network_zone" "LegacyIpZone" {
@@ -26,5 +26,5 @@ resource "okta_threat_insight_settings" "blocked_ip" {
 }
 
 output "BlockedIpZone" {
-  value = data.okta_network_zone.BlockedIpZone.id
+  value = data.okta_network_zone.BlockedIpZoneDefault.id
 }
