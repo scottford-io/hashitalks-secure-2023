@@ -59,7 +59,7 @@ jobs:
         run: |
           echo "### ${{ vars.OKTA_ORG_NAME }} Terraform pre-plan security scan :shield:" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          cnspec scan terraform ./terraform --asset-name ${{ vars.OKTA_ORG_NAME }}-terraform-hcl -f policies/okta-security.mql.yaml
+          cnspec scan terraform ./terraform --asset-name ${{ vars.OKTA_ORG_NAME }}-terraform-hcl -f policies/okta-security.mql.yaml >> $GITHUB_STEP_SUMMARY
           echo "CNSPEC_PRE_SCAN=$GITHUB_STEP_SUMMARY" >> $GITHUB_ENV
 
   terraform-plan:
@@ -114,8 +114,12 @@ jobs:
           key: ${{ runner.os }}-terraform-${{ hashFiles('**/terraform/**') }}
           path: terraform/plan.json
         
-      - name: Scan Terraform Plan
-        run: cnspec scan terraform plan terraform/plan.json --asset-name ${{ vars.OKTA_ORG_NAME }}-terraform-plan -f policies/okta-security.mql.yaml
+      - name: Scan ${{ vars.OKTA_ORG_NAME }} Terraform Plan (post-plan)
+        run: |
+          echo "### ${{ vars.OKTA_ORG_NAME }} Terraform post-plan security scan :shield:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cnspec scan terraform plan ./terraform/plan.json --asset-name ${{ vars.OKTA_ORG_NAME }}-terraform-hcl -f policies/okta-security.mql.yaml >> $GITHUB_STEP_SUMMARY
+          echo "CNSPEC_PRE_SCAN=$GITHUB_STEP_SUMMARY" >> $GITHUB_ENV
         env:
           MONDOO_DETECT_CICD: false
 
@@ -151,7 +155,9 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v3
         
-      - name: Scan Terraform Plan
-        run: cnspec scan okta --organization ${{ vars.OKTA_ORG_NAME }}.okta.com --token ${{ secrets.OKTA_API_TOKEN }} --asset-name ${{ vars.OKTA_ORG_NAME }}.okta.com -f policies/okta-security.mql.yaml
-        env:
-          MONDOO_DETECT_CICD: false
+      - name: Scan ${{ vars.OKTA_ORG_NAME }}.okta.com 
+        run: |
+          echo "### ${{ vars.OKTA_ORG_NAME }}.okta.com security scan (post-apply) :shield:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cnspec scan okta --organization ${{ vars.OKTA_ORG_NAME }}.okta.com --token ${{ secrets.OKTA_API_TOKEN }} --asset-name ${{ vars.OKTA_ORG_NAME }}.okta.com -f policies/okta-security.mql.yaml >> $GITHUB_STEP_SUMMARY
+          echo "CNSPEC_PRE_SCAN=$GITHUB_STEP_SUMMARY" >> $GITHUB_ENV
