@@ -1,1 +1,4 @@
-# hashitalks-secure-2023
+# Okta Provisioning 
+
+This repository contains Terraform automation code used to manage the Lunalectric Okta organization. 
+
