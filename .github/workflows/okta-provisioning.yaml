@@ -146,7 +146,7 @@ jobs:
         run: terraform -chdir="./terraform" apply -auto-approve
 
   post-apply-scan:
-    name: Scan Okta Org (Runtime)
+    name: Scan Okta Org (Post-Apply)
     needs: terraform-apply
     runs-on: ubuntu-latest
     container: mondoo/cnspec:latest
