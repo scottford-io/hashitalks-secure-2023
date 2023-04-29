@@ -1,0 +1,57 @@
+policies:
+  - uid: okta-health-insight-example
+    name: Okta Security - Health Insight
+    version: 1.0.0
+    license: MPL-2.0
+    tags:
+      mondoo.com/category: security
+      mondoo.com/platform: okta-org,saas
+    authors:
+      - name: Scott Ford
+        email: scott@scottford.io
+    docs: # docs and descriptions can be used to provide an overview for the policy
+      desc: |
+        This is an example policy to demonstrate a single security recommendation for Okta Security HealthInsights. 
+    groups: # groups provide a way to organize checks and data queries
+      - title: Okta Security HealthInsight
+        checks: 
+          - uid: okta-health-insight-enable-sign-on-notification-emails-for-end-users
+queries:
+- uid: okta-health-insight-enable-sign-on-notification-emails-for-end-users
+  title: Enable sign-on notification emails for end users
+  impact: 80 # each check can define an impact 
+  docs: # document the rationale for each check
+    desc: |
+      Enable this email notification so end users are informed about new sign-on activity, which can inform them if a different user has signed in to their account.
+
+      Security Impact: High 
+
+      End-user Impact: Low (End users receive an email notification if they sign in from a new or unrecognized client)
+  variants: # variants are a way to test a check across different targets such as IaC and runtime
+    - uid: okta-health-insight-enable-sign-on-notification-emails-for-end-users-terraform-hcl
+    - uid: okta-health-insight-enable-sign-on-notification-emails-for-end-users-terraform-plan
+    - uid: okta-health-insight-enable-sign-on-notification-emails-for-end-users-runtime
+- uid: okta-health-insight-enable-sign-on-notification-emails-for-end-users-terraform-hcl
+  title: Enable sign-on notification emails for end users (Terraform HCL)
+  impact: 80
+  filters: | # filters control when a check is executed 
+    asset.platform == "terraform-hcl"
+    terraform.resources.where( nameLabel == "okta_security_notification_emails")
+  mql: terraform.resources.where( nameLabel == "okta_security_notification_emails" ).all( arguments['send_email_for_new_device_enabled'] == true )
+
+- uid: okta-health-insight-enable-sign-on-notification-emails-for-end-users-terraform-plan
+  title: Enable sign-on notification emails for end users (Terraform Plan)
+  impact: 80
+  filters: | # filters control when a check is executed 
+    asset.platform == "terraform-plan"
+    terraform.plan.resourceChanges.where( type == "okta_security_notification_emails")
+  mql: terraform.plan.resourceChanges.where( type == "okta_security_notification_emails" ).all( change.after['send_email_for_new_device_enabled'] == true )
+
+- uid: okta-health-insight-enable-sign-on-notification-emails-for-end-users-runtime
+  title: Enable sign-on notification emails for end users (Runtime)
+  impact: 80
+  filters: | # filters control when a check is executed 
+    asset.platform == "okta-org"
+  mql: okta.organization.securityNotificationEmails['sendEmailForNewDeviceEnabled'] == true
+
+
