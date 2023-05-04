@@ -2,6 +2,11 @@
 
 This repository contains code used during my presentation for HashiTalks: Secure 2023 titled "Building end-to-end secure workflows for Terraform deployments from code to runtime". The code in this repo is for demonstration purposes only. If you have any questions about how to use this code, or if you run into any issues, feel free to contact me directly on [LinkedIn](https://www.linkedin.com/in/scottford-io/).
 
+You can find the recording of the talk on YouTube:
+
+[![Building End-To-End Secure Workflows for Terraform from Code to Runtime](assets/ScottFord.png)](https://www.youtube.com/live/0gKV6mRdjjc?feature=share&t=1872)
+
+
 ### Prerequsites
 
 To use try the code in this repository, you will need the following:
