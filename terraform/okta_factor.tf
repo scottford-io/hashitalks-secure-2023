@@ -16,6 +16,7 @@ resource "okta_factor" "okta_otp" {
 }
 
 resource "okta_factor" "okta_push" {
+  depends_on = [ okta_factor.okta_otp ]
   provider_id = "okta_push"
   active      = true
 }
